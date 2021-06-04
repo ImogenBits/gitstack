@@ -6,6 +6,7 @@ import os
 import stat
 from shutil import rmtree
 from pickle import dump, load
+from uuid import uuid4 as uuid
 
 def delFolder(path: str) -> None:
     for root, dirs, files in walk(path):
@@ -17,14 +18,10 @@ def delFolder(path: str) -> None:
 
 T = TypeVar("T")
 class Stack(Generic[T]):
-    __uid = 0
-
     def __init__(self) -> None:
-        self.__id = self.__uid
-        self.__uid += 1
+        self.__id = uuid()
         self.__repoPath = os.path.join(getcwd(), str(self.__id))
         self.__objPath = os.path.join(self.__repoPath, "object.p")
-        self.__objID = 0
 
         if os.path.exists(self.__repoPath):
             delFolder(self.__repoPath)
@@ -45,13 +42,15 @@ class Stack(Generic[T]):
 
     def push(self, obj: T) -> None:
         with open(self.__objPath, "wb") as f:
-            dump((obj, self.__objID), f)
+            dump((obj, uuid()), f)
         self.repo.git.stash()
-        self.__objID += 1
         remove(self.__objPath)
 
     def pop(self) -> T | None:
-        self.repo.git.stash("pop")
+        try:
+            self.repo.git.stash("pop")
+        except:
+            return None
         with open(self.__objPath, "rb") as f:
             ret = load(f)
         remove(self.__objPath)
@@ -62,6 +61,7 @@ with Stack[str]() as a:
     a.push("1")
     a.push("2")
     a.push("3")
+    print(a.pop())
     print(a.pop())
     print(a.pop())
     print(a.pop())
