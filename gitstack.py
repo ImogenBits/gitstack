@@ -60,6 +60,7 @@ with Stack[str]() as a:
     a.push("1")
     a.push("2")
     a.push("3")
+    print("stack elements are:")
     print(a.pop())
     print(a.pop())
     print(a.pop())
